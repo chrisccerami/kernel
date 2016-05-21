@@ -8,10 +8,14 @@ extern crate rlibc;
 #[macro_use]
 extern crate vga;
 
+extern crate interrupts;
+
 pub mod support; // For Rust lang items
 
 #[no_mangle]
 pub extern "C" fn kmain() -> ! {
+    interrupts::install();
+
     vga::clear_console();
 
     kprintln!("Hello from Rust world!");
@@ -22,6 +26,7 @@ pub extern "C" fn kmain() -> ! {
     let p = &x;
 
     kprintln!("Hello a final time: {:p}", p);
+
 
     loop { }
 }
