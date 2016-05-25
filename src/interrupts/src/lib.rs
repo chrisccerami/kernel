@@ -322,9 +322,6 @@ impl Idt {
 
 static mut IDT: Idt = Idt::new();
 
-#[no_mangle]
-pub static mut IDT_POINTER: IdtPointer = IdtPointer { limit: 0, base: 0 };
-
 pub fn install() {
     unsafe {
         IDT.set_isr(0, isr0 as u64);
@@ -584,10 +581,12 @@ pub fn install() {
         IDT.set_isr(254, isr254 as u64);
         IDT.set_isr(255, isr255 as u64);
 
-        IDT_POINTER.limit = core::mem::size_of::<Idt>() as u16;
-        IDT_POINTER.base = &IDT as *const _ as u64;
+        let pointer = IdtPointer {
+            limit: core::mem::size_of::<Idt>() as u16,
+            base: &IDT as *const _ as u64,
+        };
 
-        load_idt();
+        load_idt(&pointer);
     }
 }
 
@@ -595,8 +594,8 @@ pub unsafe fn enable() {
     asm!("sti" :::: "volatile");
 }
 
-unsafe fn load_idt() {
-    asm!("lidt $0"::"*m"(&IDT_POINTER)::"volatile");
+unsafe fn load_idt(pointer: &IdtPointer) {
+    asm!("lidt $0"::"*m"(pointer)::"volatile");
 }
 
 #[no_mangle]
